@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonBudget Zen - Objectif 10 000 €</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-page: #f1f7f3;
+            --bg-card: #ffffff;
+            --primary: #2d6a4f;           /* Vert forêt doux */
+            --primary-hover: #1b4332;
+            --primary-light: #e8f5ec;     /* Vert pastel très clair */
+            --accent-green: #52b788;      /* Vert menthe / sauge */
+            --text-main: #1f3028;
+            --text-muted: #587063;
+            --border: #cfe3d4;
+            --success: #2b9348;
+            --danger: #e63946;
+            --shadow: 0 10px 25px -5px rgba(45, 106, 79, 0.08), 0 8px 10px -6px rgba(45, 106, 79, 0.04);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        aside {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 30px 24px;
+            box-sizing: border-box;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.02);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 35px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        /* --- Main Content --- */
+        main {
+            flex: 1;
+            padding: 45px;
+            overflow-y: auto;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            margin-bottom: 8px;
+            color: var(--primary-hover);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        /* --- Objectif Curseur / Barre de progression --- */
+        .goal-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .goal-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .goal-stats {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .progress-track {
+            background: var(--primary-light);
+            height: 16px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--accent-green), var(--primary));
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Cards & Stats --- */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 22px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .card h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 10px 0;
+        }
+
+        .card .amount {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .card.success .amount { color: var(--success); }
+        .card.danger .amount { color: var(--danger); }
+        .card.primary .amount { color: var(--primary); }
+
+        /* --- Panels & Forms --- */
+        .panel {
+            background: var(--bg-card);
+            padding: 28px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .panel h2 {
+            font-size: 1.15rem;
+            margin-top: 0;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            outline: none;
+            background: #fafcfb;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.99);
+        }
+
+        /* --- Tables --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background: var(--primary-light);
+            padding: 14px;
+            text-align: left;
+            font-size: 0.75rem;
+            color: var(--primary-hover);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+        th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .btn-delete {
+            background: #fdf2f2;
+            color: var(--danger);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .btn-delete:hover {
+            background: #fad2d2;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge.boulangerie { background: #e8f5ec; color: var(--primary); }
+        .badge.aide { background: #fef3c7; color: #b45309; }
+        .badge.depense { background: #fdf2f2; color: var(--danger); }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            aside { width: 100%; padding: 20px; }
+            main { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barre latérale -->
+    <aside>
+        <div class="logo-area">
+            <i class="fa-solid fa-seedling"></i>
+            <span>ZenBudget</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active" onclick="switchTab('general', event)"><i class="fa-solid fa-chart-pie"></i> Vue Globale</a></li>
+            <li><a href="#" onclick="switchTab('aide', event)"><i class="fa-solid fa-graduation-cap"></i> Aide aux devoirs</a></li>
+            <li><a href="#" onclick="switchTab('boulangerie', event)"><i class="fa-solid fa-bread-slice"></i> Boulangerie</a></li>
+            <li><a href="#" onclick="switchTab('depenses', event)"><i class="fa-solid fa-receipt"></i> Dépenses</a></li>
+        </ul>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border); padding-top: 15px;">Épargne & Sérénité</div>
+    </aside>
+
+    <!-- Contenu Principal -->
+    <main>
+
+        <!-- 1. VUE GLOBALE -->
+        <div id="tab-general" class="tab-content active">
+            <h1>Vue Globale Mensuelle</h1>
+            <p class="subtitle">Suivez vos finances et votre progression vers l'objectif d'épargne.</p>
+
+            <!-- Curseur de progression Objectif 10 000 € -->
+            <div class="goal-container">
+                <div class="goal-header">
+                    <span class="goal-title"><i class="fa-solid fa-bullseye"></i> Objectif : 10 000 €</span>
+                    <span class="goal-stats" id="goal-percentage">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar" id="goal-progress-bar"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                    <span id="goal-current-text">Actuel : 0,00 €</span>
+                    <span>Cible : 10 000,00 €</span>
+                </div>
+            </div>
+
+            <div class="cards-grid">
+                <div class="card success">
+                    <h3>Total Revenus Mensuels</h3>
+                    <div class="amount" id="global-revenus">0,00 €</div>
+                </div>
+                <div class="card danger">
+                    <h3>Total Dépenses Mensuelles</h3>
+                    <div class="amount" id="global-depenses">0,00 €</div>
+                </div>
+                <div class="card primary">
+                    <h3>Solde Net Global</h3>
+                    <div class="amount" id="global-solde">0,00 €</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-list-check"></i> Récapitulatif par mois</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Catégorie</th>
+                            <th>Détails / Motif</th>
+                            <th>Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody id="global-table-body">
+                        <!-- Généré par JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. AIDE AUX DEVOIRS -->
+        <div id="tab-aide" class="tab-content">
+            <h1>Aide aux Devoirs</h1>
+            <p class="subtitle">Entrez directement le montant gagné par mois pour cette activité.</p>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-plus-circle"></i> Ajouter un montant mensuel</h2>
+                <form id="form-aide">
+                    <div class="form-group">
+                        <label>Mois (ex: Janvier, Février...)</label>
+                        <input type="text" id="aide-mois" placeholder="Ex: Octobre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Montant total perçu ce mois-ci (€)</label>
+                        <input type="number" step="0.01" id="aide-montant" placeholder="Ex: 150" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Enregistrer</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-history"></i> Historique - Aide aux devoirs</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Montant</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-aide">
+                        <!-- Généré par JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. BOULANGERIE -->
+        <div id="tab-boulangerie" class="tab-content">
+            <h1>Boulangerie</h1>
+            <p class="subtitle">Saisissez vos heures et définissez votre taux horaire net.</p>
+
+            <!-- Configuration Taux Horaire Net -->
+            <div class="panel" style="background: var(--primary-light);">
+                <h2><i class="fa-solid fa-gear"></i> Paramètre</h2>
+                <div class="form-group">
+                    <label>Votre taux horaire net (€ / heure)</label>
+                    <input type="number" step="0.01" id="taux-horaire" value="10" oninput="saveTaux()">
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-plus-circle"></i> Enregistrer les heures d'un mois</h2>
+                <form id="form-boulangerie">
+                    <div class="form-group">
+                        <label>Mois</label>
+                        <input type="text" id="boul-mois" placeholder="Ex: Octobre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre d'heures travaillées dans le mois</label>
+                        <input type="number" step="0.5" id="boul-heures" placeholder="Ex: 35" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Calculer et Enregistrer</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-history"></i> Historique - Boulangerie</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Heures</th>
+                            <th>Taux net</th>
+                            <th>Total Gagné</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-boulangerie">
+                        <!-- Généré par JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. DÉPENSES -->
+        <div id="tab-depenses" class="tab-content">
+            <h1>Dépenses</h1>
+            <p class="subtitle">Indiquez le motif et le montant de vos charges mensuelles.</p>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-plus-circle"></i> Ajouter une dépense mensuelle</h2>
+                <form id="form-depense">
+                    <div class="form-group">
+                        <label>Mois</label>
+                        <input type="text" id="dep-mois" placeholder="Ex: Octobre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Motif de la dépense</label>
+                        <input type="text" id="dep-motif" placeholder="Ex: Loyer, Transport, Courses..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Montant (€)</label>
+                        <input type="number" step="0.01" id="dep-montant" placeholder="Ex: 450" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Ajouter la dépense</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2><i class="fa-solid fa-history"></i> Historique - Dépenses</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mois</th>
+                            <th>Motif</th>
+                            <th>Montant</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-depenses">
+                        <!-- Généré par JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Gestion des données en LocalStorage
+        let data = JSON.parse(localStorage.getItem('budget_data_zen')) || {
+            tauxHoraire: 10,
+            aide: [],
+            boulangerie: [],
+            depenses: []
+        };
+
+        function saveData() {
+            localStorage.setItem('budget_data_zen', JSON.stringify(data));
+            updateUI();
+        }
+
+        function saveTaux() {
+            const val = parseFloat(document.getElementById('taux-horaire').value);
+            data.tauxHoraire = isNaN(val) ? 0 : val;
+            saveData();
+        }
+
+        // Navigation entre onglets
+        function switchTab(tabName, event) {
+            if(event) event.preventDefault();
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+        }
+
+        // Soumission Aide aux devoirs
+        document.getElementById('form-aide').addEventListener('submit', function(e) {
+            e.preventDefault();
+            data.aide.push({
+                id: Date.now(),
+                mois: document.getElementById('aide-mois').value,
+                montant: parseFloat(document.getElementById('aide-montant').value)
+            });
+            saveData();
+            this.reset();
+        });
+
+        // Soumission Boulangerie
+        document.getElementById('form-boulangerie').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const heures = parseFloat(document.getElementById('boul-heures').value);
+            const taux = data.tauxHoraire;
+            data.boulangerie.push({
+                id: Date.now(),
+                mois: document.getElementById('boul-mois').value,
+                heures: heures,
+                taux: taux,
+                total: heures * taux
+            });
+            saveData();
+            this.reset();
+        });
+
+        // Soumission Dépense
+        document.getElementById('form-depense').addEventListener('submit', function(e) {
+            e.preventDefault();
+            data.depenses.push({
+                id: Date.now(),
+                mois: document.getElementById('dep-mois').value,
+                motif: document.getElementById('dep-motif').value,
+                montant: parseFloat(document.getElementById('dep-montant').value)
+            });
+            saveData();
+            this.reset();
+        });
+
+        // Suppression d'un élément
+        function removeItem(type, id) {
+            data[type] = data[type].filter(item => item.id !== id);
+            saveData();
+        }
+
+        // Mise à jour de l'interface et des calculs
+        function updateUI() {
+            document.getElementById('taux-horaire').value = data.tauxHoraire;
+
+            // 1. Tableau Aide aux devoirs
+            const tAide = document.getElementById('table-aide');
+            tAide.innerHTML = data.aide.length === 0 ? '<tr><td colspan="3" style="text-align:center; color:var(--text-muted)">Aucune donnée enregistrée</td></tr>' : '';
+            data.aide.forEach(item => {
+                tAide.innerHTML += `<tr>
+                    <td><strong>${item.mois}</strong></td>
+                    <td>${item.montant.toFixed(2)} €</td>
+                    <td><button class="btn-delete" onclick="removeItem('aide', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+            });
+
+            // 2. Tableau Boulangerie
+            const tBoul = document.getElementById('table-boulangerie');
+            tBoul.innerHTML = data.boulangerie.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--text-muted)">Aucune donnée enregistrée</td></tr>' : '';
+            data.boulangerie.forEach(item => {
+                tBoul.innerHTML += `<tr>
+                    <td><strong>${item.mois}</strong></td>
+                    <td>${item.heures} h</td>
+                    <td>${item.taux.toFixed(2)} €/h</td>
+                    <td><strong style="color:var(--success);">+${item.total.toFixed(2)} €</strong></td>
+                    <td><button class="btn-delete" onclick="removeItem('boulangerie', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+            });
+
+            // 3. Tableau Dépenses
+            const tDep = document.getElementById('table-depenses');
+            tDep.innerHTML = data.depenses.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Aucune donnée enregistrée</td></tr>' : '';
+            data.depenses.forEach(item => {
+                tDep.innerHTML += `<tr>
+                    <td><strong>${item.mois}</strong></td>
+                    <td>${item.motif}</td>
+                    <td><strong style="color:var(--danger);>-${item.montant.toFixed(2)} €</strong></td>
+                    <td><button class="btn-delete" onclick="removeItem('depenses', ${item.id})"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>`;
+            });
+
+            // 4. Calculs Vue Globale
+            let totalAide = data.aide.reduce((acc, cur) => acc + cur.montant, 0);
+            let totalBoul = data.boulangerie.reduce((acc, cur) => acc + cur.total, 0);
+            let totalRevenus = totalAide + totalBoul;
+            let totalDepenses = data.depenses.reduce((acc, cur) => acc + cur.montant, 0);
+            let soldeNet = totalRevenus - totalDepenses;
+
+            document.getElementById('global-revenus').innerText = totalRevenus.toFixed(2) + ' €';
+            document.getElementById('global-depenses').innerText = totalDepenses.toFixed(2) + ' €';
+            document.getElementById('global-solde').innerText = soldeNet.toFixed(2) + ' €';
+
+            // Mise à jour du curseur / barre de progression Objectif 10 000 €
+            const goalTarget = 10000;
+            let currentSavings = soldeNet > 0 ? soldeNet : 0;
+            let percentage = (currentSavings / goalTarget) * 100;
+            if (percentage > 100) percentage = 100;
+
+            document.getElementById('goal-progress-bar').style.width = percentage + '%';
+            document.getElementById('goal-percentage').innerText = percentage.toFixed(1) + '%';
+            document.getElementById('goal-current-text').innerText = `Actuel : ${currentSavings.toFixed(2)} €`;
+
+            // Tableau Synthèse Globale Combiné
+            const tGlobal = document.getElementById('global-table-body');
+            tGlobal.innerHTML = '';
+
+            let allOps = [
+                ...data.aide.map(i => ({ mois: i.mois, type: 'Aide aux devoirs', badge: 'aide', desc: 'Revenu mensuel perçu', montant: i.montant, isRev: true })),
+                ...data.boulangerie.map(i => ({ mois: i.mois, type: 'Boulangerie', badge: 'boulangerie', desc: `${i.heures}h travaillées (à ${i.taux}€/h net)`, montant: i.total, isRev: true })),
+                ...data.depenses.map(i => ({ mois: i.mois, type: 'Dépense', badge: 'depense', desc: i.motif, montant: i.montant, isRev: false }))
+            ];
+
+            if(allOps.length === 0) {
+                tGlobal.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Aucune opération enregistrée</td></tr>';
+            } else {
+                allOps.forEach(op => {
+                    let montantStyle = op.isRev ? 'color: var(--success); font-weight:700;' : 'color: var(--danger); font-weight:700;';
+                    let prefix = op.isRev ? '+' : '-';
+                    tGlobal.innerHTML += `<tr>
+                        <td><strong>${op.mois}</strong></td>
+                        <td><span class="badge ${op.badge}">${op.type}</span></td>
+                        <td>${op.desc}</td>
+                        <td><span style="${montantStyle}">${prefix}${op.montant.toFixed(2)} €</span></td>
+                    </tr>`;
+                });
+            }
+        }
+
+        // Lancement initial
+        updateUI();
+    </script>
+</body>
+</html>
